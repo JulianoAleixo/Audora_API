@@ -22,13 +22,15 @@ public class UserController implements HttpHandler {
         exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
 
         if (method.equalsIgnoreCase("GET")) {
-            if (path.matches("/user/\\d+")) {
-                searchUser(exchange, path);
-            } else {
+            if (path.equals("/users")) {
                 listUser(exchange);
+            } else if (path.startsWith("/users/")) {
+                searchUser(exchange, path);
             }
         } else if (method.equalsIgnoreCase("POST")) {
             createUser(exchange);
+        } else if (method.equalsIgnoreCase("PUT")) {
+            updateUser(exchange, path);
         } else if (method.equalsIgnoreCase("DELETE")) {
             deleteUser(exchange, path);
         } else if (method.equalsIgnoreCase("OPTIONS")) {
@@ -52,7 +54,7 @@ public class UserController implements HttpHandler {
     }
 
     private void searchUser(HttpExchange exchange, String path) throws IOException {
-        int id = extractIdFromUrl(path);
+        String id = extractIdFromUrl(path);
         Optional<User> user = service.get(id);
         if (user.isPresent()) {
             sendResponse(exchange, 200, gson.toJson(user.get()));
@@ -62,7 +64,7 @@ public class UserController implements HttpHandler {
     }
 
     private void deleteUser(HttpExchange exchange, String path) throws IOException {
-        int id = extractIdFromUrl(path);
+        String id = extractIdFromUrl(path);
         boolean deleted = service.delete(id);
         if (deleted) {
             sendResponse(exchange, 204, "{\"message\": \"User successfully deleted\"}");
@@ -71,9 +73,24 @@ public class UserController implements HttpHandler {
         }
     }
 
-    private int extractIdFromUrl(String path) {
+    private void updateUser(HttpExchange exchange, String path) throws IOException {
+        String id = extractIdFromUrl(path);
+        InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8);
+        User user = gson.fromJson(isr, User.class);
+        user.setId(id);
+
+        boolean updated = service.update(user);
+        if (updated) {
+            sendResponse(exchange, 200, gson.toJson(user));
+        } else {
+            sendResponse(exchange, 404, "{\"error\": \"User not found\"}");
+        }
+    }
+
+
+    private String extractIdFromUrl(String path) {
         String[] parts = path.split("/");
-        return Integer.parseInt(parts[parts.length - 1]);
+        return parts[parts.length - 1];
     }
 
     private void sendResponse(HttpExchange exchange, int status, String response) throws IOException {

@@ -1,29 +1,31 @@
 package service;
 
 import model.User;
-import java.util.ArrayList;
+import repository.UserRepository;
+
 import java.util.List;
 import java.util.Optional;
 
 public class UserService {
-    private final List<User> users = new ArrayList<>();
-    private int nextId = 1;
+    private final UserRepository repository = new UserRepository();
 
     public List<User> getList() {
-        return users;
+        return repository.getAll();
     }
 
     public User create(User user) {
-        user.setId(nextId++);
-        users.add(user);
-        return user;
+        return repository.create(user);
     }
 
-    public Optional<User> get(int id) {
-        return users.stream().filter(user -> user.getId() == id).findFirst();
+    public Optional<User> get(String id) {
+        return repository.getById(id);
     }
 
-    public boolean delete(int id) {
-        return users.removeIf(user -> user.getId() == id);
+    public boolean update(User user) {
+        return repository.update(user);
+    }
+
+    public boolean delete(String id) {
+        return repository.delete(id);
     }
 }
