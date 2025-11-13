@@ -1,9 +1,11 @@
 package http;
 
 import com.sun.net.httpserver.HttpServer;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
+import controller.ArtistController;
 import controller.FollowController;
 import controller.UserController;
 import controller.GenreController;
@@ -17,6 +19,7 @@ public class Server {
         server.createContext("/users", new UserController());
         server.createContext("/follows", new FollowController());
         server.createContext("/genres", new GenreController());
+        server.createContext("/artists", new ArtistController());
 
         server.setExecutor(null);
         System.out.println("Server started on http://localhost:8080");
